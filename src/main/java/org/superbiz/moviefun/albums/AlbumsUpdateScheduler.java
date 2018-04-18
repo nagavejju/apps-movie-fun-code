@@ -51,13 +51,8 @@ public class AlbumsUpdateScheduler {
         logger.debug("Create Table if not exist");
         jdbcTemplate.execute("CREATE TABLE if not exists album_scheduler_task (started_at TIMESTAMP NULL DEFAULT NULL);");
         logger.debug("Created");
+        int updatedRows=-1;
 
-        int updatedRows = jdbcTemplate.update(
-                "UPDATE album_scheduler_task" +
-                        " SET started_at = now()" +
-                        " WHERE started_at IS NULL" +
-                        " OR started_at < date_sub(now(), INTERVAL 2 MINUTE)"
-        );
         String sql = "SELECT COUNT(*) FROM album_scheduler_task";
         int row = jdbcTemplate.queryForObject(
                 sql, Integer.class);
@@ -66,6 +61,14 @@ public class AlbumsUpdateScheduler {
             logger.debug("Trying to insert row");
             jdbcTemplate.execute("INSERT INTO album_scheduler_task (started_at) VALUES (NULL);");
             logger.debug("inserted");
+        }
+        else{
+            updatedRows = jdbcTemplate.update(
+                    "UPDATE album_scheduler_task" +
+                            " SET started_at = now()" +
+                            " WHERE started_at IS NULL" +
+                            " OR started_at < date_sub(now(), INTERVAL 2 MINUTE)"
+            );
         }
         return updatedRows > 0;
     }
